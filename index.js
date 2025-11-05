@@ -24,6 +24,7 @@ app.use(cors({
     'http://localhost:5000',
     'http://localhost:5173',
     'http://127.0.0.1:5500',
+	'https://vibe-todo-frontend-git-main-sungpum-chons-projects.vercel.app',
     // 배포된 프런트 주소가 있으면 여기에 추가 (예: 'https://<project>.cloudtype.app')
   ],
   credentials: true,
