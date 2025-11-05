@@ -6,49 +6,50 @@ const todosRouter = require('./routes/todos');
 
 const app = express();
 
-// CORS 설정 - 개발 환경용 (여러 출처 허용)
+/* ===== 1) ENV ===== */
+const MONGODB_URI = process.env.MONGODB_URI;
+const PORT = process.env.PORT || 5000;
+
+if (!MONGODB_URI) {
+  console.error('❌ MONGODB_URI가 설정되지 않았습니다.');
+  process.exit(1);
+}
+console.log('🔐 MONGODB_URI 감지:', MONGODB_URI.slice(0, 25) + '...');
+
+/* ===== 2) MIDDLEWARE ===== */
+app.use(express.json());
 app.use(cors({
-	origin: [
-		'http://localhost:3000',
-		'http://localhost:5000',
-		'http://127.0.0.1:5500'
-	],
-	credentials: true,
-	methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-	allowedHeaders: ['Content-Type', 'Authorization']
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:5000',
+    'http://127.0.0.1:5500',
+    // 배포된 프런트 주소가 있으면 여기에 추가 (예: 'https://<project>.cloudtype.app')
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(express.json());
-const port = process.env.PORT || 5000;
-const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/todo';
-
+/* ===== 3) ROUTES ===== */
 app.get('/', (_req, res) => {
-	res.json({ status: 'ok', message: 'Todo backend is running' });
+  res.json({ status: 'ok', message: 'Todo backend is running' });
 });
-
 app.use('/todos', todosRouter);
 
-async function start() {
-	try {
-		await mongoose.connect(mongoUri, {
-			serverSelectionTimeoutMS: 5000, // 5초 타임아웃
-			socketTimeoutMS: 45000,
-		});
-		console.log('✅ MongoDB 연결 성공');
-		app.listen(port, () => {
-			console.log(`🚀 Server listening on http://localhost:${port}`);
-		});
-	} catch (err) {
-		console.error('❌ MongoDB 연결 실패:', err.message);
-		console.error('\n💡 해결 방법:');
-		console.error('   1. MongoDB 서비스가 실행 중인지 확인하세요.');
-		console.error('   2. 또는 MongoDB Atlas를 사용하려면 환경변수 MONGODB_URI를 설정하세요.');
-		console.error('   3. 예: $env:MONGODB_URI="mongodb+srv://username:password@cluster.mongodb.net/todo"');
-		console.error('\n   현재 연결 시도 URI:', mongoUri);
-		process.exit(1);
-	}
-}
+/* ===== 4) BOOTSTRAP ===== */
+(async function bootstrap() {
+  try {
+    await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000, // 10초 내 연결 실패 시 에러
+      // 필요하면 dbName: 'todo'
+    });
+    console.log('✅ MongoDB connected');
 
-start();
-
-
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Server listening on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error('❌ MongoDB connect error:', err.message);
+    process.exit(1);
+  }
+})();
