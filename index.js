@@ -17,20 +17,48 @@ if (!MONGODB_URI) {
 console.log('🔐 MONGODB_URI 감지:', MONGODB_URI.slice(0, 25) + '...');
 
 /* ===== 2) MIDDLEWARE ===== */
-app.use(express.json());
+// CORS 설정 - express.json() 전에 배치
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5000',
+  'http://localhost:5173',
+  'http://127.0.0.1:5500',
+  'https://vibe-todo-frontend-git-main-sungpum-chons-projects.vercel.app',
+  // Vercel 패턴 매칭
+  /^https:\/\/.*\.vercel\.app$/,
+  /^https:\/\/vibe-todo-frontend.*\.vercel\.app$/,
+];
+
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:5000',
-    'http://localhost:5173',
-    'http://127.0.0.1:5500',
-	'https://vibe-todo-frontend-git-main-sungpum-chons-projects.vercel.app',
-    // 배포된 프런트 주소가 있으면 여기에 추가 (예: 'https://<project>.cloudtype.app')
-  ],
+  origin: function (origin, callback) {
+    // origin이 없으면 (같은 출처 요청 등) 허용
+    if (!origin) return callback(null, true);
+    
+    // 허용된 origin 목록 확인
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (typeof allowed === 'string') {
+        return origin === allowed;
+      } else if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return false;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.log('⚠️ CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
+
+app.use(express.json());
 
 /* ===== 3) ROUTES ===== */
 app.get('/', (_req, res) => {
