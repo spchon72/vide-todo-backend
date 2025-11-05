@@ -22,6 +22,7 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     'http://localhost:5000',
+    'http://localhost:5173',
     'http://127.0.0.1:5500',
     // 배포된 프런트 주소가 있으면 여기에 추가 (예: 'https://<project>.cloudtype.app')
   ],
