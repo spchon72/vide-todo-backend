@@ -1,7 +1,21 @@
 const express = require('express');
 const Todo = require('../models/Todo');
 
+
 const router = express.Router();
+
+// CORS 미들웨어 추가 (이 라우터에만 적용)
+router.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*'); // 또는 특정 도메인: 'https://vibe-todo-frontend-eosin.vercel.app'
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  
+  // Preflight 요청 처리
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
 
 router.post('/', async (req, res) => {
 	try {
